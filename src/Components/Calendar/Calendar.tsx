@@ -8,12 +8,17 @@ import getDay from 'date-fns/getDay'
 import enUS from 'date-fns/locale/en-US'
 import addHours from 'date-fns/addHours'
 import startOfHour from 'date-fns/startOfHour'
+import Popup from "../EventPopup/EventPopup";
+import Modal from 'react-modal';
+
 
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 //import { fireEvent } from '@testing-library/react'
 
+
 const Calendar1: FC = () => {
+  const [showPopup, setShowPopup] = useState(false);
   const [events, setEvents] = useState<Event[]>([
     {
       title: 'Learn cool stuff',
@@ -21,36 +26,51 @@ const Calendar1: FC = () => {
       end,
     },
   ])
-
+  const [currEvent, setcurrEvent] = useState<Event>(events[0]);
+  
   const onEventResize: withDragAndDropProps['onEventResize'] = data => {
-    const { start, end } = data
-
+    const { start, end, event } = data;
     setEvents(currentEvents => {
-      const firstEvent = {
+      const updatedEvent = {
+        ...event, // Keep all properties of the original event
         start: new Date(start),
         end: new Date(end),
-      }
-      const idx = events.indexOf(firstEvent)
-      events.splice(idx, 1);
-      return [...currentEvents, firstEvent]
-    })
+      };
+      const eventIdx = currentEvents.findIndex(evt => evt === event); // Find the index of the original event in the currentEvents array
+      const updatedEvents = [...currentEvents]; // Make a copy of the current events array
+      updatedEvents[eventIdx] = updatedEvent; // Replace the original event with the updated event
+      return updatedEvents;
+    });
   }
 
   const onEventDrop: withDragAndDropProps['onEventDrop'] = data => {
-    const { start, end } = data
+    const { start, end, event } = data;
     setEvents(currentEvents => {
-      const firstEvent = {
+      const updatedEvent = {
+        ...event, // Keep all properties of the original event
         start: new Date(start),
         end: new Date(end),
-      }
-      const idx = events.indexOf(firstEvent)
-      events.splice(idx, 1);
-      return [...currentEvents, firstEvent]
-    })
-    // console.log(data)
+      };
+      const eventIdx = currentEvents.findIndex(evt => evt === event); // Find the index of the original event in the currentEvents array
+      const updatedEvents = [...currentEvents]; // Make a copy of the current events array
+      updatedEvents[eventIdx] = updatedEvent; // Replace the original event with the updated event
+      return updatedEvents;
+    });
   }
 
+  const handleEventClick = (clickedEvent: Event) => {
+    setShowPopup(true);
+    setcurrEvent(clickedEvent)
+    console.log(clickedEvent.end)
+  };
+  
+  const handleClosePopup = () => {
+    setShowPopup(false);
+
+  };
+
   return (
+    <div>
     <DnDCalendar
       defaultView='week'
       events={events}
@@ -59,7 +79,14 @@ const Calendar1: FC = () => {
       onEventResize={onEventResize}
       resizable
       style={{ height: '100vh' }}
+      onSelectEvent={(event: Event) => {handleEventClick(event)}}
     />
+
+    <Modal isOpen={showPopup} onRequestClose={handleClosePopup}>
+      <Popup event={currEvent}  onClose={handleClosePopup}/>
+    </Modal>
+    {/* {showPopup && <Popup event={currEvent} onClose={handleClosePopup} />} */}
+    </div>
   )
 }
 
